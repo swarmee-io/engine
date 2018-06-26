@@ -88,8 +88,6 @@ services:
               "--insecure-bind-address=0.0.0.0",
               "--insecure-port=8080",
               "--feature-gates=MountPropagation=true,CustomPodDNS=true"]
-              #"--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota"]
-              # ]
 
   scheduler:
     image: gcr.io/google_containers/hyperkube:v1.9.8
