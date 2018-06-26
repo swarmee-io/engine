@@ -1,1 +1,210 @@
----
+version: '3.3'
+
+configs:
+  kubeconfig:
+    data: |
+      apiVersion: v1
+      clusters:
+      - cluster:
+          server: http://10.32.88.11:8080
+        name: default
+      contexts:
+      - context:
+          cluster: default
+          user: ""
+        name: default
+      current-context: default
+
+init-containers:
+  dns-init:
+    image: swarmee/dns_init:0.8.0
+    cap_drop:
+    - ALL
+    cap_add:
+    - NET_BIND_SERVICE
+    privileged: true
+    command: ["10.32.88.88", "8600"]
+
+services:
+  consul:
+    image: consul
+    labels:
+      - SERVICE_IGNORE=1
+    dns:
+      - 10.32.88.88
+    dns_search:
+      - service.consul
+    init-containers:
+      - dns-init
+    deploy:
+      endpoint_mode: dnsrr
+    networks:
+      main-net:
+        ipv4_address: 10.32.88.88
+        aliases:
+          - consul
+    ports:
+      - published: 8500
+        target: 8500
+        mode: host
+    command: ["agent",
+              "-server",
+              "-bootstrap",
+              "-ui",
+              "-recursor=8.8.8.8",
+              "-recursor=8.8.4.4",
+              "-client=0.0.0.0",
+              "-advertise=10.32.88.88"]
+
+  etcd:
+    image: quay.io/coreos/etcd:latest
+    deploy:
+      endpoint_mode: dnsrr
+    networks:
+      main-net:
+        ipv4_address: 10.32.88.1
+    command: ["/usr/local/bin/etcd",
+              "-advertise-client-urls=http://0.0.0.0:2379",
+              "-listen-client-urls=http://0.0.0.0:2379"]
+
+  apiserver:
+    image: gcr.io/google_containers/hyperkube:v1.9.8
+    privileged: true
+    deploy:
+      endpoint_mode: dnsrr
+    networks:
+      main-net:
+        ipv4_address: 10.32.88.11
+    ports:
+      - published: 8080
+        target: 8080
+        mode: host
+    command: ["/hyperkube", "apiserver",
+              "--v=4",
+              "--advertise-address=10.32.88.11",
+              "--allow-privileged=true",
+              "--service-cluster-ip-range=10.32.96.0/19",
+              "--etcd-servers=http://10.32.88.1:2379",
+              "--insecure-bind-address=0.0.0.0",
+              "--insecure-port=8080",
+              "--feature-gates=MountPropagation=true,CustomPodDNS=true"]
+              #"--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota"]
+              # ]
+
+  scheduler:
+    image: gcr.io/google_containers/hyperkube:v1.9.8
+    privileged: true
+    deploy:
+      endpoint_mode: dnsrr
+    networks:
+      main-net: {}
+    command: ["/hyperkube",
+              "scheduler",
+              "--master=10.32.88.11:8080",
+              "--v=4"]
+
+  controller-manager:
+    image: gcr.io/google_containers/hyperkube:v1.9.8
+    privileged: true
+    deploy:
+      endpoint_mode: dnsrr
+    networks:
+      main-net: {}
+    command: ["/hyperkube",
+              "controller-manager",
+              "--master=10.32.88.11:8080",
+              "--v=4"]
+
+  node:
+    image: gcr.io/google_containers/pause-amd64:3.1
+    deploy:
+      endpoint_mode: dnsrr
+    pid: host
+    ipc: host
+    networks:
+      - main-net
+      - bridge
+
+  kubelet:
+    image: gcr.io/google_containers/hyperkube:v1.9.8
+    privileged: true
+    deploy:
+      endpoint_mode: dnsrr
+    network_mode: "service:node"
+    networks: {}
+    configs:
+      - source: kubeconfig
+        target: /etc/kubeconfig
+    volumes:
+      - /:/rootfs:ro
+      - /sys:/sys:rw
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /dev:/dev
+      - /var/lib/docker:/var/lib/docker:ro
+      - /var/run:/var/run:rw
+      - /var/lib/kubelet:/var/lib/kubelet:rw
+      - /var/log/pods:/var/log/pods:rw
+      - /var/run/crio/crio.sock:/var/run/crio/crio.sock
+    command: ["/hyperkube",
+              "kubelet",
+              "--v=10",
+              "--containerized",
+              "--cgroup-driver=systemd",
+              "--cluster-dns=10.32.88.88",
+              "--allow-privileged=true",
+              "--kubeconfig=/etc/kubeconfig",
+              "--address=0.0.0.0",
+              "--enable-server=true",
+              "--fail-swap-on=false",
+              "--container-runtime=remote",
+              "--container-runtime-endpoint=unix:///var/run/crio/crio.sock",
+              "--runtime-request-timeout=10m",
+              "--feature-gates=CustomPodDNS=true",
+              "--cluster-domain=cluster.local"]
+
+  proxy:
+    image: gcr.io/google_containers/hyperkube:v1.9.8
+    privileged: true
+    deploy:
+      endpoint_mode: dnsrr
+    network_mode: "service:node"
+    networks: {}
+    volumes:
+      - /var/run:/var/run:rw
+    configs:
+      - source: kubeconfig
+        target: /etc/kubeconfig
+    command: ["/hyperkube",
+              "proxy",
+              "--v=10",
+              "--kubeconfig=/etc/kubeconfig"]
+
+  consul-register:
+    image: tczekajlo/kube-consul-register:0.1.4
+    deploy:
+      endpoint_mode: dnsrr
+    networks:
+      - main-net
+    configs:
+      - source: kubeconfig
+        target: /etc/kubeconfig
+    command: ["-logtostderr=true",
+              "-kubeconfig=/etc/kubeconfig",
+              "-configmap=kube-system/kube-consul-register",
+              "-in-cluster=false"]
+
+networks:
+  bridge:
+    name: bridge
+    external: true
+
+  main-net:
+    name: main-net
+    attachable: true
+    driver: weaveworks/net-plugin:2.3.0
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.32.0.0/16
+          ip_ranges:
+            - 10.32.0.0/18
