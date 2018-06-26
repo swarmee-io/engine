@@ -8,3 +8,6 @@ wget -P /tmp https://raw.githubusercontent.com/weaveworks/weave/2.3/weave
 sudo apt-get install -y /tmp/kengine-17.06.2-ke-75.deb
 sudo service docker start
 sudo bash /tmp/weave setup
+
+rm /tmp/kengine-17.06.2-ke-75.deb
+rm /tmp/weave
