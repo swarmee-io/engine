@@ -177,8 +177,6 @@ services:
     command: ["/hyperkube",
               "proxy",
               "--v=10",
-              "--conntrack-max=0",
-              "--conntrack-tcp-timeout-established=0",
               "--kubeconfig=/etc/kubeconfig"]
 
   consul-register:
