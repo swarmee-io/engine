@@ -1,6 +1,6 @@
 # swarmee
 
-Kubernetes strength on the ease of Swarm
+Strength of Kubernetes, Ease of Swarm
 
 1. Setup `kengine`.
 
