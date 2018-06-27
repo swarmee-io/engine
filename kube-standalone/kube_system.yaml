@@ -167,8 +167,6 @@ services:
     privileged: true
     deploy:
       endpoint_mode: dnsrr
-    pid: host
-    ipc: host      
     network_mode: "service:node"
     networks: {}
     volumes:
