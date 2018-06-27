@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=17.06.2-ke-75
+VERSION=17.06.2-ke-76
 
 sudo add-apt-repository -y ppa:projectatomic/ppa
 sudo apt-get update
