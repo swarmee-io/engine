@@ -172,6 +172,7 @@ services:
     network_mode: "service:node"
     networks: {}
     volumes:
+      - /sys:/sys:rw    
       - /var/run:/var/run:rw
     configs:
       - source: kubeconfig
