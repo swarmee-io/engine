@@ -14,6 +14,19 @@ configs:
           user: ""
         name: default
       current-context: default
+  local_kubeconfig:
+    data: |
+      apiVersion: v1
+      clusters:
+      - cluster:
+          server: http://127.0.0.1:8080
+        name: default
+      contexts:
+      - context:
+          cluster: default
+          user: ""
+        name: default
+      current-context: default
 
 init-containers:
   dns-init:
@@ -113,16 +126,6 @@ services:
               "--master=10.32.88.11:8080",
               "--v=4"]
 
-  node:
-    image: gcr.io/google_containers/pause-amd64:3.1
-    deploy:
-      endpoint_mode: dnsrr
-    pid: host
-    ipc: host
-    networks:
-      - main-net
-      - bridge
-
   kubelet:
     image: gcr.io/google_containers/hyperkube:v1.9.8
     privileged: true
@@ -130,14 +133,13 @@ services:
       endpoint_mode: dnsrr
     pid: host
     ipc: host
-    network_mode: "service:node"
+    network_mode: host
     networks: {}
     configs:
-      - source: kubeconfig
+      - source: local_kubeconfig
         target: /etc/kubeconfig
     volumes:
       - /:/rootfs:ro
-      - /sys:/sys:rw
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /dev:/dev
       - /var/lib/docker:/var/lib/docker:ro
@@ -167,12 +169,12 @@ services:
     privileged: true
     deploy:
       endpoint_mode: dnsrr
-    network_mode: "service:node"
+    network_mode: host
     networks: {}
     volumes:
       - /var/run:/var/run:rw
     configs:
-      - source: kubeconfig
+      - source: local_kubeconfig
         target: /etc/kubeconfig
     command: ["/hyperkube",
               "proxy",
@@ -194,10 +196,6 @@ services:
               "-in-cluster=false"]
 
 networks:
-  bridge:
-    name: bridge
-    external: true
-
   main-net:
     name: main-net
     attachable: true
