@@ -1,7 +1,9 @@
-sudo docker swarm init
-sudo docker plugin install --grant-all-permissions weaveworks/net-plugin:2.3.0
+sudo kengine swarm init
+sudo kengine plugin install --grant-all-permissions weaveworks/net-plugin:2.3.0
 sudo mkdir -p /var/lib/kubelet
 sudo mkdir -p /var/log/pods
 sudo service crio start
 
-curl -sSL https://raw.githubusercontent.com/swarmee-io/swarmee/master/kube-standalone/kube_system.yaml | sudo stack deploy -c - kube
+URL=https://raw.githubusercontent.com/swarmee-io/swarmee/master/kube-standalone/kube_system.yaml
+
+curl -sSL $URL | sudo stack deploy -c - kube
