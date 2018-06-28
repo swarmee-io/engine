@@ -7,7 +7,7 @@ Strength of Kubernetes, Ease of Swarm
 1. Setup `kengine`.
 
 ```
-curl -sSL http://get.swarmee.io | sudo bash
+curl -sSL http://kengine.swarmee.io | sudo bash
 ```
 
 2. Up and running a single-node Kubernetes
