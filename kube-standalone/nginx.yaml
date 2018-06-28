@@ -1,0 +1,29 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2
+  template:
+    metadata:
+      annotations:
+        consul.register/enabled: "true"
+        consul.register/service.name: "nginx"
+      labels:
+        app: nginx
+        version: v1
+    spec:
+      containers:
+      - name: nginx
+        image: docker.io/nginx:1.7.9
+        ports:
+        - containerPort: 80
+      dnsConfig:
+        searches:
+          - service.consul
+        options:
+          - name: ndots
+            value: "1"
