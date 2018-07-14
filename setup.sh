@@ -1,22 +1,25 @@
 #!/bin/sh
 
-VERSION=17.06.2-ke-76
+ENGINE_VERSION=17.06.2-ke-76
+WNET_VERSION=2.3
+STACK_VERSION=0.1.2
+KUBE_VERSION=v1.9.8
 
 sudo add-apt-repository -y ppa:projectatomic/ppa
 sudo apt-get update
 
-( cd /tmp && curl -SLO --progress-bar https://github.com/swarmee-io/kengine/releases/download/$VERSION/kengine-${VERSION}.deb )
-( cd /tmp && curl -SLO --progress-bar https://raw.githubusercontent.com/weaveworks/weave/2.3/weave )
-( cd /tmp && curl -SLO --progress-bar https://github.com/swarmee-io/stack-deploy/releases/download/0.1.1/stack )
-( cd /tmp && curl -LO --progress-bar https://storage.googleapis.com/kubernetes-release/release/v1.9.8/bin/linux/amd64/kubectl )
+( cd /tmp && curl -SLO --progress-bar https://github.com/swarmee-io/kengine/releases/download/${ENGINE_VERSION}/kengine-${ENGINE_VERSION}.deb )
+( cd /tmp && curl -SLO --progress-bar https://raw.githubusercontent.com/weaveworks/weave/${WNET_VERSION}/weave )
+( cd /tmp && curl -SLO --progress-bar https://github.com/swarmee-io/stack-deploy/releases/download/${STACK_VERSION}/stack )
+( cd /tmp && curl -LO --progress-bar https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl )
 chmod +x /tmp/stack
 chmod +x /tmp/kubectl
 
-sudo apt-get install -y /tmp/kengine-${VERSION}.deb
+sudo apt-get install -y /tmp/kengine-${ENGINE_VERSION}.deb
 sudo service docker start
 sudo bash /tmp/weave setup
 sudo mv /tmp/stack /usr/local/bin/stack
 sudo mv /tmp/kubectl /usr/local/bin/kubectl
 
-rm /tmp/kengine-${VERSION}.deb
+rm /tmp/kengine-${ENGINE_VERSION}.deb
 rm /tmp/weave
