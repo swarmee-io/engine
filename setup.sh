@@ -1,9 +1,9 @@
 #!/bin/sh
 
-ENGINE_VERSION=17.06.2-ke-76
+ENGINE_VERSION=18.03.2-ke-1
 WNET_VERSION=2.3
-STACK_VERSION=0.1.2
-KUBE_VERSION=v1.9.8
+STACK_VERSION=0.1.4
+KUBE_VERSION=v1.10.5
 
 sudo add-apt-repository -y ppa:projectatomic/ppa
 sudo apt-get update
