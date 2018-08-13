@@ -2,7 +2,7 @@
 
 ENGINE_VERSION=18.03.2-ke-1
 WNET_VERSION=2.3
-STACK_VERSION=0.1.4
+STACK_VERSION=0.1.5
 KUBE_VERSION=v1.10.5
 
 sudo add-apt-repository -y ppa:projectatomic/ppa
